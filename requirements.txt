@@ -2,5 +2,5 @@ numpy
 pandas
 pygwalker
 scikit-learn
-st=pages
+st-pages
 streamlit
