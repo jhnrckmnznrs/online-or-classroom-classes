@@ -6,8 +6,8 @@ You are working as a data scientist at a local University. The university starte
 
 ## Executive Summary
 To determine whether course type is a factor in enrollment, we analyze the enrollment counts and test our hypotheses. Furthermore, we provide a machine learning model to predict enrollment counts of future offered courses by the university. The report is divided into the following sections:
-Introduction: Overview of enrollment trends in universities offering both online and onsite courses.
-Data Preprocessing: Detailed explanation on data cleaning.
-Hypothesis Testing: Test to determine whether difference in enrollment counts is significant.
-Regression Model: Model to predict future enrollment trends.
-Conclusion: Final remarks obtained from the model experiments.
+1. Introduction: Overview of enrollment trends in universities offering both online and onsite courses.
+2. Data Preprocessing: Detailed explanation on data cleaning.
+3. Hypothesis Testing: Test to determine whether difference in enrollment counts is significant.
+4. Regression Model: Model to predict future enrollment trends.
+5. Conclusion: Final remarks obtained from the model experiments.
