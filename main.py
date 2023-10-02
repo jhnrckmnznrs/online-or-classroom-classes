@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from math import floor
+import sklearn
 
 from sklearn.linear_model import LinearRegression, ElasticNet, LassoLarsCV
 from sklearn.model_selection import train_test_split
