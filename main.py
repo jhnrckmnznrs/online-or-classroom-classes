@@ -1,106 +1,33 @@
 import numpy as np
 import pandas as pd
-from math import floor
-import sklearn
-
-from sklearn.linear_model import LinearRegression, ElasticNet, LassoLarsCV
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error as MSE
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import Binarizer, MaxAbsScaler, RobustScaler, StandardScaler
-from sklearn.feature_selection import SelectPercentile, f_regression
 
 import streamlit as st
-# from streamlit.hello.utils import show_code
 
-filepath = "https://s3.amazonaws.com/talent-assets.datacamp.com/university_enrollment_2306.csv"
-df = pd.read_csv(filepath)
-values = {"course_type": 'classroom', "year": 2011, "enrollment_count": 0, "pre_score": '0', "post_score": 0, "pre_requirement": 'None', "department": 'unknown'}
-df = df.fillna(value = values)
-df['pre_score'] = df['pre_score'].replace('-', '0')
-df['pre_score'] = df['pre_score'].astype(float)
-df['department'] = df['department'].str.strip().replace('Math', 'Mathematics')
-df_dummy = pd.get_dummies(df, drop_first = True)
-X = df_dummy.drop(['enrollment_count', 'course_id'], axis = 1).values
-y = df_dummy['enrollment_count'].values
+from st_pages import Page, show_pages, add_page_title
 
+# Optional -- adds the title and icon to the current page
+# add_page_title()
 
-def get_classifier(clf_name, random_state):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = random_state)
-    if clf_name == 'Linear Regression':
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test) # Baseline
-        y_pred_train = model.predict(X_train) # Baseline
-        rmse_train = MSE(y_train, y_pred_train, squared=False)
-        rmse_test = MSE(y_test, y_pred, squared=False)
-    elif clf_name == 'Elastic Net':
-        alpha = st.sidebar.number_input('Penalty Terms Multiplier', format = '%f', value = 1.0)
-        model = ElasticNet(alpha = alpha)
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-        y_pred_train = model.predict(X_train) # Baseline
-        rmse_train = MSE(y_train, y_pred_train, squared=False)
-        rmse_test = MSE(y_test, y_pred, squared=False)
-    elif clf_name == 'TPOT-Optimized Pipeline':
-        model = make_pipeline(
-            SelectPercentile(score_func=f_regression, percentile=84),
-            StandardScaler(),
-            Binarizer(threshold=0.55),
-            RobustScaler(),
-            MaxAbsScaler(),
-            LassoLarsCV(normalize=False)
+# Specify what pages should be shown in the sidebar, and what their titles 
+# and icons should be
+show_pages(
+    [
+        Page("main.py", "Introduction"),
+        Page("pages/dataframe.py", "Enrollment Data"),
+        Page("pages/regression.py", "Regression Model"),
+    ]
+)
+
+st.title("Online vs. Classroom: Which Enrollment Type is Right?")
+
+st.markdown("""
+            <h2> Background and Objective </h2>
+            <div style="text-align: justify;">
+            You are working as a data scientist at a local University. The university started offering online courses to reach a wider range of students. The university wants you to help them understand enrollment trends. They would like you to identify what contributes to higher enrollment. In particular, whether the course type (online or classroom) is a factor.
+            </div>
+            <h2> Introduction </h2>
+            <div style="text-align: justify;">
+            Enrollment trends in online courses accelerated dramatically during the COVID-19 pandemic. During the height of the pandemic, most classes moved to online-only instruction. While the effects of the pandemic has subsided, online learning remains popular, with many students choosing to take online courses or even complete entire degrees online. In hindsight, online courses offer flexibility and convenience that traditional classroom-based courses cannot. Students can take online courses at their own pace and on their own schedule, from anywhere in the world. This makes online learning a good option for students who are working full-time, have families, or live in remote areas. However, there are also some drawbacks such as the difficulty of staying motivated and engaged. Students also miss out on the social interaction and networking opportunities that are available in traditional classroom settings. It is important to note that online and onsite learning are not mutually exclusive. Many students choose to take a mix of online and onsite courses. This allows them to take advantage of the benefits of both types of learning.
+            </div>
+            """, unsafe_allow_html=True
             )
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-        y_pred_train = model.predict(X_train) # Baseline
-        rmse_train = MSE(y_train, y_pred_train, squared=False)
-        rmse_test = MSE(y_test, y_pred, squared=False)
-    return model, rmse_train, rmse_test
-
-random_state = st.sidebar.number_input('Random Seed', value = 42, step = 1)
-clf = st.sidebar.selectbox("Regression Model", ('Elastic Net', 'Linear Regression', 'TPOT-Optimized Pipeline'))
-model, rmse_train, rmse_test = get_classifier(clf, random_state)
-act = st.sidebar.radio("Action", ('Training Information', 'Make Prediction'))
-
-def get_action(act_name, model):
-    if act_name == 'Training Information':
-        st.markdown(
-            """ 
-            # Trained Model Information
-            """
-            )
-        st.write('Hyperparameters of the Selected Model', model.get_params())
-        st.write('Root Mean Square Error on the Training Set:', rmse_train)
-        st.write('Root Mean Square Error on the Testing Set:', rmse_test)
-    else:
-        st.write("### Input Features")
-        t= str.lower(st.selectbox('Course Type', ('Online', 'Classroom')))
-        y = st.number_input('Year', value = 2011)
-        pr = st.number_input('Pre-assessment Score', format = '%f', value = 84.0)
-        po = st.number_input('Post-Assessment Score', format = '%f', value = 95.0)
-        pre = st.selectbox('Pre-requisite', ('None', 'Beginner', 'Intermediate'))
-        d = st.selectbox('Department', ('Science', 'Mathematics', 'Technology', 'Engineering'))
-        if t == 'online':
-            t = 1
-        else:
-            t = 0
-        if pre == 'Beginner':
-            pre = np.zeros(2)
-        elif pre == 'Intermediate':
-            pre = [1,0]
-        else:
-            pre = [0,1]
-        if d == 'Engineering':
-            d = np.zeros(3) 
-        elif d == 'Mathematics':
-            d = [1,0,0]
-        elif d == 'Science':
-            d = [0,1,0]
-        else:
-            d = [0,0,1]
-        input_feat = np.array(np.concatenate([[y,pr,po,t],pre,d]).reshape(1,-1))
-        st.write('#### Predicted Enrollment Count:', floor(model.predict(input_feat)[0]))
-    return
-
-get_action(act, model)
